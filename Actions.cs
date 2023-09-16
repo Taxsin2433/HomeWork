@@ -30,15 +30,25 @@ namespace HwCreateGame.Logger
         }
 
         public static Result ErrorAction()
-        {
-            Result result = new Result
+        {  
+            try
             {
-                Status = LogLevel.Error,
-                Message = "This is an error message",
-                DateTime = DateTime.Now
-            };
-            Logger.Instance.Log(result);
-            return result;
+                throw new BusinessException("BussinesException Happened"); 
+            }
+            catch (BusinessException ex)
+            {
+                Result result = new Result
+                {
+
+                    Status = LogLevel.Error,
+                    Message = ex.Message,
+                    DateTime = DateTime.Now
+                };
+                Logger.Instance.Log(result);
+                return result;
+
+            }
+
         }
     }
 }

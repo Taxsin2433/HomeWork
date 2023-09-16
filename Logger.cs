@@ -9,7 +9,7 @@ namespace HwCreateGame.Logger
         private JsonFileAppender fileAppender;
         private Logger()
         {
-            fileAppender = new JsonFileAppender("log.json");
+            fileAppender = new JsonFileAppender("Log");
         }
 
         public static Logger Instance
