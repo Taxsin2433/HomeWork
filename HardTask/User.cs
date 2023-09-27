@@ -13,5 +13,6 @@ namespace HwCreateGame.HardTask
         public string Email { get; set; }
         public DateTime BirthDate { get; set; }
         public int UserId { get; set; }
+
     }
 }

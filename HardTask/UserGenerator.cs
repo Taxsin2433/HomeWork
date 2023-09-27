@@ -3,7 +3,20 @@
 public class UserGenerator
 {
     private static readonly string[] EmailDomains = { "gmail.com", "ukr.net", "outlook.com" };
+    private static readonly string[] FirstNames = { "John", "Jane", "Michael", "Emily", "David", "Sarah" };
+    private static readonly string[] LastNames = { "Smith", "Johnson", "Williams", "Brown", "Jones", "Miller" };
 
+    private static string GetRandomFirstName()
+    {
+        Random random = new Random();
+        return FirstNames[random.Next(FirstNames.Length)];
+    }
+
+    private static string GetRandomLastName()
+    {
+        Random random = new Random();
+        return LastNames[random.Next(LastNames.Length)];
+    }
     public static List<User> GenerateUsers(int numberOfUsers)
 
     {
@@ -14,8 +27,8 @@ public class UserGenerator
         {
             var user = new User
             {
-                FirstName = "User" + i,
-                LastName = "LastName" + i,
+                FirstName = GetRandomFirstName(),
+                LastName = GetRandomLastName(),
                 Email = $"user{i}@{EmailDomains[random.Next(EmailDomains.Length)]}",
                 BirthDate = DateTime.Now.AddYears(-random.Next(12, 50)),
                 UserId = i

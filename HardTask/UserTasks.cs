@@ -68,7 +68,7 @@ public class UserTasks
                 BirthDate = user.BirthDate
             });
 
-            Console.WriteLine($"Пользователь с фамилией '{group.Key}':");
+            Console.WriteLine($"Возможные родственники с фамилией '{group.Key}':");
             foreach (var relative in relatives)
             {
                 Console.WriteLine($"Имя: {relative.FullName}, Дата рождения: {relative.BirthDate.ToShortDateString()}");
