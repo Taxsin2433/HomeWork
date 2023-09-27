@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,7 +9,7 @@ namespace HwCreateGame
 {
     namespace HwCreateGame
     {
-        public class BinaryTree<T> where T : IComparable
+        public class BinaryTree<T> : IEnumerable<T> where T : IComparable
         {
             public BinaryTreeNode<T> RootNode { get; set; }
             public int Count { get; private set; }
@@ -111,9 +112,34 @@ namespace HwCreateGame
                     PrintTree(startNode.RightNode, indent, Side.Right);
                 }
             }
+            public IEnumerator<T> GetEnumerator()
+            {
+                return InOrderTraversal(RootNode).GetEnumerator();
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return GetEnumerator();
+            }
+
+            private IEnumerable<T> InOrderTraversal(BinaryTreeNode<T> node)
+            {
+                if (node != null)
+                {
+                    foreach (var item in InOrderTraversal(node.LeftNode))
+                        yield return item;
+
+                    yield return node.Data;
+
+                    foreach (var item in InOrderTraversal(node.RightNode))
+                        yield return item;
+                }
+            }
         }
     }
 }
+    
+
 
          
 
