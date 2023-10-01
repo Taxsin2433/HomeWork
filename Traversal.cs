@@ -1,6 +1,4 @@
-﻿using HwCreateGame.HwCreateGame;
-using System;
-using System.Collections.Generic;
+﻿
 
 namespace HwCreateGame
 {
@@ -13,16 +11,6 @@ namespace HwCreateGame
                 Console.Write($"{node.Data} ");
                 PreOrderTraversal(node.LeftNode);
                 PreOrderTraversal(node.RightNode);
-            }
-        }
-
-        public void InOrderTraversal(BinaryTreeNode<T> node)
-        {
-            if (node != null)
-            {
-                InOrderTraversal(node.LeftNode);
-                Console.Write($"{node.Data} ");
-                InOrderTraversal(node.RightNode);
             }
         }
 
@@ -43,8 +31,6 @@ namespace HwCreateGame
 
             Stack<BinaryTreeNode<T>> currentLevel = new Stack<BinaryTreeNode<T>>();
             Stack<BinaryTreeNode<T>> nextLevel = new Stack<BinaryTreeNode<T>>();
-
-            currentLevel.Push(node);
             bool leftToRight = true;
 
             while (currentLevel.Count > 0)
@@ -78,3 +64,4 @@ namespace HwCreateGame
         }
     }
 }
+

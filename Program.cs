@@ -1,11 +1,5 @@
-﻿using HwCreateGame;
-using HwCreateGame.HwCreateGame;
-
-public enum Side
-{
-    Left,
-    Right
-}
+﻿using HwCreateGame.HwCreateGame;
+using HwCreateGame;
 
 class Program
 {
@@ -25,7 +19,7 @@ class Program
 
             if (int.TryParse(input, out int number))
             {
-                binaryTree.Add(number);
+                binaryTree.Insert(number);
             }
             else
             {
@@ -40,29 +34,29 @@ class Program
         Traversal<int> traversal = new Traversal<int>();
         traversal.PreOrderTraversal(binaryTree.RootNode);
 
-        Console.WriteLine("\nОбратный обход дерева:");
-        traversal.PostOrderTraversal(binaryTree.RootNode);
-
         Console.WriteLine("\nСпиральный обход дерева:");
         traversal.SpiralTraversal(binaryTree.RootNode);
 
         Console.WriteLine("\nВведите число для поиска в дереве:");
         string searchInput = Console.ReadLine();
+
         if (int.TryParse(searchInput, out int searchNumber))
         {
-            var foundNode = binaryTree.FindNode(searchNumber);
-            if (foundNode != null)
+            BinarySearch<int> binarySearch = new BinarySearch<int>();
+            bool found = binarySearch.Search(binaryTree.RootNode, searchNumber);
+
+            if (found)
             {
-                Console.WriteLine($"Элемент {searchNumber} найден в дереве.");
+                Console.WriteLine("Элемент найден в дереве.");
             }
             else
             {
-                Console.WriteLine($"Элемент {searchNumber} не найден в дереве.");
+                Console.WriteLine("Элемент не найден в дереве.");
             }
         }
         else
         {
-            Console.WriteLine("Некорректный ввод числа для поиска.");
+            Console.WriteLine("Некорректный ввод числа для поиска. Попробуйте еще раз.");
         }
 
         Console.ReadLine();
