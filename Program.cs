@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 class Program
 {
-    static void Main()
+    static async Task Main()
     {
         Console.WriteLine("Введите два числа для вычисления Фибоначчи и факториала (через пробел):");
         string[] numbers = Console.ReadLine().Split(' ');
@@ -14,8 +16,13 @@ class Program
         Fibonacci fibCalculator = new Fibonacci();
         Factorial factCalculator = new Factorial();
 
-        long fibResult = fibCalculator.CalcFibonacci(fibNumber);
-        long factResult = factCalculator.CalcFactorial(factNumber);
+        Task<long> fibTask = fibCalculator.CalcFibonacciAsync(fibNumber);
+        Task<long> factTask = factCalculator.CalcFactorialAsync(factNumber);
+
+        await Task.WhenAll(fibTask, factTask);
+
+        long fibResult = fibTask.Result;
+        long factResult = factTask.Result;
 
         collectionManager.AddResult(fibNumber, fibResult, factResult);
 

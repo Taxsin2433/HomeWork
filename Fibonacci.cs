@@ -1,4 +1,7 @@
-﻿class Fibonacci
+﻿using System;
+using System.Threading.Tasks;
+
+class Fibonacci
 {
     public long CalcFibonacci(int n)
     {
@@ -16,5 +19,10 @@
         }
 
         return b;
+    }
+
+    public async Task<long> CalcFibonacciAsync(int n)
+    {
+        return await Task.Run(() => CalcFibonacci(n));
     }
 }

@@ -1,4 +1,7 @@
-﻿class Factorial
+﻿using System;
+using System.Threading.Tasks;
+
+class Factorial
 {
     public long CalcFactorial(int n)
     {
@@ -13,5 +16,10 @@
         }
 
         return result;
+    }
+
+    public async Task<long> CalcFactorialAsync(int n)
+    {
+        return await Task.Run(() => CalcFactorial(n));
     }
 }
