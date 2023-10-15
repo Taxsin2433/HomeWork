@@ -1,56 +1,38 @@
-﻿using HwCreateGame;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Threading;
-
-namespace HwCreateGame
+﻿namespace HwCreateGame
 {
     public class FileHandler
     {
-        private string filePath;
-        private Mutex mutex;
+        private readonly string filePath;
 
         public FileHandler(string filePath)
         {
             this.filePath = filePath;
-            mutex = new Mutex();
         }
 
-        // Запись контактов в файл
-        public void WriteContactsToFile(List<Contact> contacts)
+        public async Task WriteContactsToFileAsync(List<Contact> contacts)
         {
-            mutex.WaitOne();
-            try
+            using (var writer = new StreamWriter(filePath))
             {
-                using (StreamWriter writer = new StreamWriter(filePath))
+                foreach (var contact in contacts)
                 {
-                    foreach (Contact contact in contacts)
-                    {
-                        writer.WriteLine($"{contact.Name},{contact.Surname},{contact.Phone}");
-                    }
+                    await writer.WriteLineAsync($"{contact.Name},{contact.Surname},{contact.Phone}");
                 }
             }
-            finally
-            {
-                mutex.ReleaseMutex();
-            }
         }
 
-        // Чтение контактов из файла
         public List<Contact> ReadContactsFromFile()
         {
-            List<Contact> contacts = new List<Contact>();
+            var contacts = new List<Contact>();
 
-            using (StreamReader reader = new StreamReader(filePath))
+            using (var reader = new StreamReader(filePath))
             {
                 string line;
                 while ((line = reader.ReadLine()) != null)
                 {
-                    string[] contactData = line.Split(',');
+                    var contactData = line.Split(',');
                     if (contactData.Length == 3)
                     {
-                        Contact contact = new Contact(contactData[0], contactData[1], contactData[2]);
+                        var contact = new Contact(contactData[0], contactData[1], contactData[2]);
                         contacts.Add(contact);
                     }
                 }
@@ -60,4 +42,3 @@ namespace HwCreateGame
         }
     }
 }
-

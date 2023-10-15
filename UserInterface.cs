@@ -1,24 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace HwCreateGame
 {
     public class UserInterface
     {
-        private ContactList contactList;
-        private FileHandler fileHandler;
-        private bool canWriteToFile;
+        private readonly ContactList contactList;
+        private readonly FileHandler fileHandler;
 
-        public UserInterface(ContactList contactList, FileHandler fileHandler, bool canWriteToFile)
+        public UserInterface(ContactList contactList, FileHandler fileHandler)
         {
             this.contactList = contactList;
             this.fileHandler = fileHandler;
-            this.canWriteToFile = canWriteToFile;
         }
 
-        // Метод обработки команд пользователя
-        public void ProcessUserCommands()
+        public async Task ProcessUserCommandsAsync()
         {
             while (true)
             {
@@ -28,14 +26,7 @@ namespace HwCreateGame
                 switch (command.ToLower())
                 {
                     case "1":
-                        if (canWriteToFile)
-                        {
-                            AddContact();
-                        }
-                        else
-                        {
-                            Console.WriteLine("Запись в файл разрешена только в одном экземпляре приложения.");
-                        }
+                        await AddContactAsync();
                         break;
                     case "2":
                         SearchContacts();
@@ -46,14 +37,7 @@ namespace HwCreateGame
                     case "4":
                         return;
                     case "5":
-                        if (canWriteToFile)
-                        {
-                            DeleteContact();
-                        }
-                        else
-                        {
-                            Console.WriteLine("Удаление контакта разрешено только в одном экземпляре приложения.");
-                        }
+                        await DeleteContactAsync();
                         break;
                     default:
                         Console.WriteLine("Неверная команда. Пожалуйста, попробуйте снова.");
@@ -62,8 +46,7 @@ namespace HwCreateGame
             }
         }
 
-        // Метод добавления контакта
-        private void AddContact()
+        private async Task AddContactAsync()
         {
             Console.WriteLine("Введите данные контакта:");
             Console.Write("Имя: ");
@@ -77,7 +60,6 @@ namespace HwCreateGame
             contactList.AddContact(contact);
         }
 
-        // Метод поиска контактов
         private void SearchContacts()
         {
             Console.WriteLine("Введите параметр поиска:");
@@ -98,12 +80,19 @@ namespace HwCreateGame
             }
         }
 
-        // Метод отображения всех контактов
         private void DisplayAllContacts()
         {
-            // Считываем сохраненный список контактов перед выводом
             List<Contact> savedContacts = fileHandler.ReadContactsFromFile();
-            contactList.UpdateContacts(savedContacts);
+            // Очищаем текущие контакты в contactList
+            foreach (var contact in contactList.GetAllContacts())
+            {
+                contactList.DeleteContact(contact);
+            }
+            // Добавляем новые контакты
+            foreach (var contact in savedContacts)
+            {
+                contactList.AddContact(contact);
+            }
 
             Console.WriteLine("Список контактов:");
             foreach (var contact in savedContacts)
@@ -112,8 +101,7 @@ namespace HwCreateGame
             }
         }
 
-        // Метод удаления контакта
-        private void DeleteContact()
+        private async Task DeleteContactAsync()
         {
             Console.WriteLine("Введите имя контакта для удаления:");
             string name = Console.ReadLine();

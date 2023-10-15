@@ -1,45 +1,40 @@
 ﻿using System;
-using System.IO;
-using System.Threading;
+using System.Threading.Tasks;
 
-using HwCreateGame;
-
-public class Program
+namespace HwCreateGame
 {
-    public static void Main(string[] args)
+    public class Program
     {
-        string filePath = "contacts.txt";
-        bool canWriteToFile = false;
-        Mutex mutex = new Mutex(false, "ContactsFileLock"); // Создаем Mutex
-
-        // Пытаемся захватить Mutex
-        try
+        public static async Task Main(string[] args)
         {
-            if (mutex.WaitOne(TimeSpan.Zero, true))
+            string filePath = "contacts.txt";
+
+            bool createdNew;
+            Mutex mutex = new Mutex(true, "ContactsFileLock", out createdNew);
+
+            if (createdNew)
             {
-                canWriteToFile = true; // Разрешаем запись в файл
+                // Разрешаем запись в файл только одному экземпляру
+                ContactList contactList = new ContactList();
+                FileHandler fileHandler = new FileHandler(filePath);
+                UserInterface userInterface = new UserInterface(contactList, fileHandler);
+                await userInterface.ProcessUserCommandsAsync();
+
+                // Записываем контакты в файл перед выходом (асинхронно)
+                await fileHandler.WriteContactsToFileAsync(contactList.GetAllContacts());
+
+                // Освобождаем Mutex
+                mutex.ReleaseMutex();
             }
             else
             {
-                Console.WriteLine("Доступ к файлу заблокирован. Разрешена только операция чтения.");
+                // Если Mutex был захвачен другим экземпляром, разрешаем только чтение
+                FileHandler fileHandler = new FileHandler(filePath);
+                ContactList contactList = new ContactList();
+
+                UserInterface userInterface = new UserInterface(contactList, fileHandler);
+                await userInterface.ProcessUserCommandsAsync();
             }
         }
-        catch (AbandonedMutexException)
-        {
-            canWriteToFile = true; // Если Mutex был заброшен, разрешаем запись в файл
-        }
-
-        ContactList contactList = new ContactList();
-        FileHandler fileHandler = new FileHandler(filePath);
-
-        // Запускаем пользовательский интерфейс
-        UserInterface userInterface = new UserInterface(contactList, fileHandler, canWriteToFile);
-        userInterface.ProcessUserCommands();
-
-        // Записываем контакты в файл перед выходом
-        fileHandler.WriteContactsToFile(contactList.GetAllContacts());
-
-        // Освобождаем Mutex
-        mutex.ReleaseMutex();
     }
 }
