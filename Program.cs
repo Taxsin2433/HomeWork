@@ -1,40 +1,40 @@
-﻿using System;
+﻿using HwCreateGame;
+using System;
+using System.Threading;
 using System.Threading.Tasks;
 
-namespace HwCreateGame
+class Program
 {
-    public class Program
+    static async Task Main(string[] args)
     {
-        public static async Task Main(string[] args)
+        string filePath = "contacts.json";
+        bool canWriteToFile = false;
+        Mutex mutex = new Mutex(false, "ContactsFileLock");
+
+        try
         {
-            string filePath = "contacts.txt";
-
-            bool createdNew;
-            Mutex mutex = new Mutex(true, "ContactsFileLock", out createdNew);
-
-            if (createdNew)
+            if (mutex.WaitOne(TimeSpan.Zero, true))
             {
-                // Разрешаем запись в файл только одному экземпляру
-                ContactList contactList = new ContactList();
-                FileHandler fileHandler = new FileHandler(filePath);
-                UserInterface userInterface = new UserInterface(contactList, fileHandler);
-                await userInterface.ProcessUserCommandsAsync();
-
-                // Записываем контакты в файл перед выходом (асинхронно)
-                await fileHandler.WriteContactsToFileAsync(contactList.GetAllContacts());
-
-                // Освобождаем Mutex
-                mutex.ReleaseMutex();
+                canWriteToFile = true;
             }
             else
             {
-                // Если Mutex был захвачен другим экземпляром, разрешаем только чтение
-                FileHandler fileHandler = new FileHandler(filePath);
-                ContactList contactList = new ContactList();
-
-                UserInterface userInterface = new UserInterface(contactList, fileHandler);
-                await userInterface.ProcessUserCommandsAsync();
+                Console.WriteLine("Доступ к файлу заблокирован. Разрешена только операция чтения.");
             }
         }
+        catch (AbandonedMutexException)
+        {
+            canWriteToFile = true;
+            mutex.ReleaseMutex();
+        }
+
+        IConsoleManager consoleManager = new ConsoleManager();
+        IContactList contactList = new ContactList(consoleManager);
+        FileHandler fileHandler = new FileHandler(filePath, canWriteToFile);
+
+        UserInterface userInterface = new UserInterface(contactList, fileHandler, consoleManager);
+        await userInterface.ProcessUserCommands();
+
+        mutex.ReleaseMutex();
     }
 }

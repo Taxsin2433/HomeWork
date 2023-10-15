@@ -1,41 +1,62 @@
-﻿namespace HwCreateGame
+﻿using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
+
+namespace HwCreateGame
 {
     public class FileHandler
     {
-        private readonly string filePath;
+        private string _filePath;
+        private bool _canWriteToFile;
 
-        public FileHandler(string filePath)
+        public FileHandler(string filePath, bool canWriteToFile)
         {
-            this.filePath = filePath;
+            _filePath = filePath;
+            _canWriteToFile = canWriteToFile;
         }
 
         public async Task WriteContactsToFileAsync(List<Contact> contacts)
         {
-            using (var writer = new StreamWriter(filePath))
+            if (!_canWriteToFile)
             {
-                foreach (var contact in contacts)
+                Console.WriteLine("Writing to the file is not allowed in this instance of the application.");
+                return;
+            }
+
+            try
+            {
+                string json = JsonConvert.SerializeObject(contacts, Formatting.Indented);
+                using (StreamWriter writer = new StreamWriter(_filePath))
                 {
-                    await writer.WriteLineAsync($"{contact.Name},{contact.Surname},{contact.Phone}");
+                    await writer.WriteAsync(json);
                 }
+            }
+            catch (IOException ex)
+            {
+                Console.WriteLine($"Error writing to the file: {ex.Message}");
             }
         }
 
-        public List<Contact> ReadContactsFromFile()
+        public async Task<List<Contact>> ReadContactsFromFileAsync()
         {
-            var contacts = new List<Contact>();
+            List<Contact> contacts = new List<Contact>();
 
-            using (var reader = new StreamReader(filePath))
+            try
             {
-                string line;
-                while ((line = reader.ReadLine()) != null)
+                if (File.Exists(_filePath))
                 {
-                    var contactData = line.Split(',');
-                    if (contactData.Length == 3)
+                    using (StreamReader reader = new StreamReader(_filePath))
                     {
-                        var contact = new Contact(contactData[0], contactData[1], contactData[2]);
-                        contacts.Add(contact);
+                        string json = await reader.ReadToEndAsync();
+                        contacts = JsonConvert.DeserializeObject<List<Contact>>(json);
                     }
                 }
+            }
+            catch (IOException ex)
+            {
+                Console.WriteLine($"Error reading the file: {ex.Message}");
             }
 
             return contacts;

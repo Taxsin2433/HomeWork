@@ -1,32 +1,48 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace HwCreateGame
 {
-    public class ContactList
+    public class ContactList : IContactList
     {
-        private readonly List<Contact> contacts = new List<Contact>();
+        private SortedSet<Contact> contacts;
+        private IConsoleManager consoleManager;
+
+        public ContactList(IConsoleManager consoleManager)
+        {
+            contacts = new SortedSet<Contact>(new ContactComparer());
+            this.consoleManager = consoleManager;
+        }
 
         public void AddContact(Contact contact)
         {
             contacts.Add(contact);
         }
 
-        public List<Contact> SearchContacts(string parameter)
+        public IList<Contact> SearchContacts(string parameter)
         {
-            return contacts.Where(c =>
-                c.Name.Contains(parameter, StringComparison.OrdinalIgnoreCase) ||
-                c.Surname.Contains(parameter, StringComparison.OrdinalIgnoreCase) ||
-                c.Phone.Contains(parameter, StringComparison.OrdinalIgnoreCase)).ToList();
+            parameter = parameter.ToLower();
+
+            var searchResults = new List<Contact>();
+            foreach (var contact in contacts)
+            {
+                if (contact.Name.IndexOf(parameter, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    contact.Surname.IndexOf(parameter, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    contact.Phone.IndexOf(parameter, StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    searchResults.Add(contact);
+                }
+            }
+
+            return searchResults;
         }
 
         public void DisplayAllContacts()
         {
-            Console.WriteLine("Список контактов:");
+            consoleManager.DisplayMessage("Список контактов:");
             foreach (var contact in contacts)
             {
-                Console.WriteLine($"Имя: {contact.Name}, Фамилия: {contact.Surname}, Телефон: {contact.Phone}");
+                consoleManager.DisplayMessage($"Имя: {contact.Name}, Фамилия: {contact.Surname}, Телефон: {contact.Phone}");
             }
         }
 
@@ -35,9 +51,28 @@ namespace HwCreateGame
             contacts.Remove(contact);
         }
 
-        public List<Contact> GetAllContacts()
+        public IList<Contact> GetAllContacts()
         {
-            return contacts;
+            return new List<Contact>(contacts);
+        }
+
+        public void UpdateContacts(IList<Contact> newContacts)
+        {
+            contacts.Clear();
+            foreach (var contact in newContacts)
+            {
+                contacts.Add(contact);
+            }
+        }
+
+    }
+
+    // Custom comparer to sort contacts by name
+    public class ContactComparer : IComparer<Contact>
+    {
+        public int Compare(Contact x, Contact y)
+        {
+            return string.Compare(x.Name, y.Name, StringComparison.OrdinalIgnoreCase);
         }
     }
 }

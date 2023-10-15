@@ -1,120 +1,113 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace HwCreateGame
+﻿namespace HwCreateGame
 {
     public class UserInterface
     {
-        private readonly ContactList contactList;
-        private readonly FileHandler fileHandler;
+        private IContactList _contactList;
+        private FileHandler _fileHandler;
+        private IConsoleManager _consoleManager;
 
-        public UserInterface(ContactList contactList, FileHandler fileHandler)
+        public UserInterface(IContactList contactList, FileHandler fileHandler, IConsoleManager consoleManager)
         {
-            this.contactList = contactList;
-            this.fileHandler = fileHandler;
+            this._contactList = contactList;
+            this._fileHandler = fileHandler;
+            this._consoleManager = consoleManager;
         }
 
-        public async Task ProcessUserCommandsAsync()
+        public async Task ProcessUserCommands()
         {
             while (true)
             {
-                Console.WriteLine("Введите команду (1 - Добавить, 2 - Найти, 3 - Отобразить список, 4 - Выйти, 5 - Удалить):");
+                _consoleManager.DisplayMessage("Введите команду (1 - Добавить, 2 - Найти, 3 - Отобразить список, 4 - Выйти, 5 - Удалить):");
                 string command = Console.ReadLine();
 
                 switch (command.ToLower())
                 {
                     case "1":
-                        await AddContactAsync();
+                       await AddContact();
                         break;
                     case "2":
                         SearchContacts();
                         break;
                     case "3":
-                        DisplayAllContacts();
+                        await DisplayAllContactsAsync();
                         break;
                     case "4":
                         return;
                     case "5":
-                        await DeleteContactAsync();
+                        DeleteContact();
                         break;
                     default:
-                        Console.WriteLine("Неверная команда. Пожалуйста, попробуйте снова.");
+                        _consoleManager.DisplayMessage("Неверная команда. Пожалуйста, попробуйте снова.");
                         break;
                 }
             }
         }
 
-        private async Task AddContactAsync()
+        private async Task AddContact()
         {
-            Console.WriteLine("Введите данные контакта:");
-            Console.Write("Имя: ");
+            _consoleManager.DisplayMessage("Введите данные контакта:");
+            _consoleManager.DisplayMessage("Имя: ");
             string name = Console.ReadLine();
-            Console.Write("Фамилия: ");
+            _consoleManager.DisplayMessage("Фамилия: ");
             string surname = Console.ReadLine();
-            Console.Write("Телефон: ");
+            _consoleManager.DisplayMessage("Телефон: ");
             string phone = Console.ReadLine();
 
             Contact contact = new Contact(name, surname, phone);
-            contactList.AddContact(contact);
+            _contactList.AddContact(contact);
+            await _fileHandler.WriteContactsToFileAsync(_contactList.GetAllContacts().ToList());
         }
 
         private void SearchContacts()
         {
-            Console.WriteLine("Введите параметр поиска:");
+            _consoleManager.DisplayMessage("Введите параметр поиска:");
             string parameter = Console.ReadLine();
 
-            List<Contact> searchResults = contactList.SearchContacts(parameter);
+            var searchResults = _contactList.SearchContacts(parameter);
             if (searchResults.Count > 0)
             {
-                Console.WriteLine("Результаты поиска:");
+                _consoleManager.DisplayMessage("Результаты поиска:");
                 foreach (var contact in searchResults)
                 {
-                    Console.WriteLine($"Имя: {contact.Name}, Фамилия: {contact.Surname}, Телефон: {contact.Phone}");
+                    _consoleManager.DisplayMessage($"Имя: {contact.Name}, Фамилия: {contact.Surname}, Телефон: {contact.Phone}");
                 }
             }
             else
             {
-                Console.WriteLine("Контакты не найдены.");
+                _consoleManager.DisplayMessage("Контакты не найдены.");
             }
         }
 
-        private void DisplayAllContacts()
+        private async Task DisplayAllContactsAsync()
         {
-            List<Contact> savedContacts = fileHandler.ReadContactsFromFile();
-            // Очищаем текущие контакты в contactList
-            foreach (var contact in contactList.GetAllContacts())
-            {
-                contactList.DeleteContact(contact);
-            }
-            // Добавляем новые контакты
-            foreach (var contact in savedContacts)
-            {
-                contactList.AddContact(contact);
-            }
+            _consoleManager.DisplayMessage("Список контактов:");
 
-            Console.WriteLine("Список контактов:");
+            // Read contacts from the file using the FileHandler
+            List<Contact> savedContacts = await _fileHandler.ReadContactsFromFileAsync();
+
+            // Update the contact list with the saved contacts
+            _contactList.UpdateContacts(savedContacts);
+
             foreach (var contact in savedContacts)
             {
-                Console.WriteLine($"Имя: {contact.Name}, Фамилия: {contact.Surname}, Телефон: {contact.Phone}");
+                _consoleManager.DisplayMessage($"Имя: {contact.Name}, Фамилия: {contact.Surname}, Телефон: {contact.Phone}");
             }
         }
 
-        private async Task DeleteContactAsync()
+        private void DeleteContact()
         {
-            Console.WriteLine("Введите имя контакта для удаления:");
+            _consoleManager.DisplayMessage("Введите имя контакта для удаления:");
             string name = Console.ReadLine();
 
-            Contact contact = contactList.GetAllContacts().FirstOrDefault(c => c.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+            var contact = _contactList.GetAllContacts().ToList().Find(c => c.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
             if (contact != null)
             {
-                contactList.DeleteContact(contact);
-                Console.WriteLine("Контакт успешно удален.");
+                _contactList.DeleteContact(contact);
+                _consoleManager.DisplayMessage("Контакт успешно удален.");
             }
             else
             {
-                Console.WriteLine("Контакт не найден.");
+                _consoleManager.DisplayMessage("Контакт не найден.");
             }
         }
     }
